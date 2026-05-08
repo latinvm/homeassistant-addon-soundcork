@@ -123,16 +123,22 @@ You will need:
 
 Format a USB stick as FAT32, create an empty file named `remote_services`
 at the root, plug it into the speaker, and reboot the speaker. After
-boot, SSH on port `17000` is open.
+boot, SSH on port `22` is open as `root` with no password. SoundCork's
+admin actions (`/admin/switchToSoundcork/{id}` and
+`/admin/addDevice/{id}`) connect on the same port; the `Reachable`
+column in `/admin/` is literally a port-22 TCP probe.
 
 ### 2. Connect
 
 ```sh
-ssh -p 17000 root@<speaker-ip>
+ssh root@<speaker-ip>
 ```
 
-The default password is documented in the SoundCork upstream README.
-Bose set it; this wrapper has nothing to do with it.
+No password. This is set by Bose firmware; the wrapper has nothing to
+do with it. If you see `Permission denied` instead of being dropped at
+a shell, the USB-stick unlock did not take — re-check the file is
+named exactly `remote_services` (no extension, no leading dot) and
+sits at the root of the FAT32 partition.
 
 ### 3. Override the SDK config
 
