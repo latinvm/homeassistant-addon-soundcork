@@ -1,0 +1,31 @@
+name: SoundCork
+version: 0.1.0
+slug: soundcork
+description: Self-hosted replacement for the Bose SoundTouch cloud (wraps timvw/soundcork)
+url: https://github.com/latinvm/homeassistant-addon-soundcork
+arch:
+  - amd64
+  - aarch64
+init: false
+startup: services
+boot: auto
+ports:
+  8000/tcp: 8000
+ports_description:
+  8000/tcp: SoundCork HTTP API
+options:
+  base_url: ""
+  MGMT_USERNAME: admin
+  MGMT_PASSWORD: ""
+  data_dir: /data/soundcork
+  OIDC_ISSUER_URL: ""
+  OIDC_CLIENT_ID: ""
+  OIDC_CLIENT_SECRET: ""
+schema:
+  base_url: str
+  MGMT_USERNAME: str
+  MGMT_PASSWORD: password
+  data_dir: str
+  OIDC_ISSUER_URL: str?
+  OIDC_CLIENT_ID: str?
+  OIDC_CLIENT_SECRET: password?
