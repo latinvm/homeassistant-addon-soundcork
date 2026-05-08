@@ -3,6 +3,34 @@
 This is the long-form reference shown on the **Documentation** tab. The
 Configuration tab is light on context; this is where the context lives.
 
+## Why we wrap `timvw/soundcork`, not `deborahgu/soundcork`
+
+The original SoundCork lives at
+[`deborahgu/soundcork`](https://github.com/deborahgu/soundcork). It is
+the more popular repo (more stars, more recently pushed, larger issue
+tracker) and it also publishes a multi-arch image at
+`ghcr.io/deborahgu/soundcork`. A reasonable first instinct is to pin
+that one.
+
+This add-on does not, on purpose:
+
+- The original has **no management authentication**. The `/webui/`,
+  `/admin/`, and `/mgmt/...` routes are open to anyone who can reach
+  port 8000. On a flat home LAN this is usually fine; on a network
+  with an IoT VLAN, a reverse proxy, or guest devices, it is not.
+- [`timvw/soundcork`](https://github.com/timvw/soundcork) is a fork
+  that adds HTTP Basic auth (`MGMT_USERNAME` / `MGMT_PASSWORD`),
+  optional OIDC, and a few operational toggles. Those options are the
+  reason this add-on has the schema it does.
+
+If you would prefer the unauthenticated upstream, do not use this
+add-on as-is: change the Dockerfile pin to `ghcr.io/deborahgu/soundcork`
+and remove the `MGMT_*` / `OIDC_*` fields from `config.yaml` and
+`run.sh`. Do not silently leave them in place; with `deborahgu/soundcork`
+they do nothing and the password fields create false reassurance.
+
+For the rest of this document, "upstream" means the timvw fork.
+
 ## Option reference
 
 ### `base_url` (required, string)
