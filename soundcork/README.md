@@ -30,6 +30,24 @@ procedure (USB stick, SSH, override config) is in the
 
 After **Save**, click **Start**. Logs appear on the **Log** tab.
 
+## Open the UI
+
+Once the add-on is running, open `http://<your-ha-ip>:8000/webui/` in a
+browser and log in with `MGMT_USERNAME` / `MGMT_PASSWORD`. That is the
+human-facing console for managing accounts, presets, and speakers.
+
+The bare `/` path returns a trivial 200 with no UI; that is by design,
+not a misconfiguration. Other useful paths:
+
+- `/webui/` -> main web UI (start here).
+- `/admin/` -> per-device admin actions (switch a device to SoundCork,
+  add device by id). Trailing slash required.
+
+`/docs`, `/redoc`, and `/openapi.json` are disabled by upstream and will
+404. The Bose speakers themselves call other paths (`/marge/...`,
+`/bmx/...`, account / source / preset endpoints). You do not browse
+those manually.
+
 ## Where to file what
 
 - A speaker behaves wrong, an endpoint returns the wrong shape, a feature

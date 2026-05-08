@@ -72,6 +72,21 @@ some-but-not-all set: upstream's enable check is a boolean AND across the
 three values, which means a half-configured OIDC silently runs as
 unauthenticated, which is worse than a clear startup failure.
 
+## URL paths exposed by SoundCork
+
+| Path | Purpose |
+| --- | --- |
+| `/webui/` | Main human-facing web UI. Start here. Login uses `MGMT_USERNAME` / `MGMT_PASSWORD`. |
+| `/admin/` | Per-device admin actions (switch a device to SoundCork, add device by ID). Trailing slash required. |
+| `/mgmt/...` | JSON management API (accounts, Spotify init/callback). |
+| `/marge/...`, `/bmx/...`, account / source / preset endpoints | Called by the speakers themselves. Do not browse manually. |
+| `/` | Trivial landing handler that returns 200 with no UI. By design, not a misconfiguration. |
+
+`/docs` (FastAPI auto-generated Swagger) is **not** exposed by upstream
+in this build; do not rely on it for endpoint discovery. Read the source
+of `/app/soundcork/main.py` in the running container if you need an
+authoritative endpoint list.
+
 ## Speaker-side procedure
 
 The add-on serves the API. You still have to point your speakers at it.
