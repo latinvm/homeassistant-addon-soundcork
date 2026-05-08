@@ -11,10 +11,18 @@ after Bose shut down the SoundTouch cloud on 6 May 2026.
 Click the badge to open the add-repository dialog with this repo's URL
 pre-filled, then **Add**, then install **SoundCork** from the store.
 
-If the badge does not work (browser extension, non-default Home Assistant
-URL, no internet on the device viewing this README):
+> **Known issue on Home Assistant frontend `20260429.x` and similar.**
+> The `Add-ons` panel was renamed to `Apps` and moved under
+> `/config/apps`. The `my.home-assistant.io` redirect target the badge
+> uses still points at the legacy `/hassio/store` route, so on these
+> frontend versions the click lands on the Apps page without opening
+> the add-repository dialog. Use the manual steps below until upstream
+> ships a fix; the wrapper itself is unaffected.
 
-1. **Settings -> Add-ons -> Add-on store**.
+### Manual install (always works)
+
+1. **Settings -> Apps** (called **Settings -> Add-ons** on Home Assistant
+   frontend versions older than 2026.04). Open the **Add-on store** tab.
 2. Three-dot menu in the top right -> **Repositories**.
 3. Paste `https://github.com/latinvm/homeassistant-addon-soundcork` and click **Add**.
 
