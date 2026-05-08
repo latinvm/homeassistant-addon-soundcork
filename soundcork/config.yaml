@@ -13,6 +13,8 @@ ports:
   8000/tcp: 8000
 ports_description:
   8000/tcp: SoundCork HTTP API
+map:
+  - share:rw
 options:
   base_url: ""
   MGMT_USERNAME: admin

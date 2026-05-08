@@ -155,11 +155,109 @@ device-discovery quirks, see the upstream
 - The add-on does not configure DNS hijack or speakers. You apply the
   speaker-side procedure manually.
 
+## Manual seeding (fallback)
+
+SoundCork's web UI has a **Configure Account** flow that creates the
+account / source / preset XML files on disk for you. Use that first.
+The fallback documented in this section only matters when that flow
+fails (the speaker rejects the generated config, the upstream import
+errors out, you have a working set of files from another instance
+you want to graft in, etc).
+
+The add-on grants itself read/write access to the HAOS `share` folder.
+On startup it looks at `/share/soundcork/seed/` and, if any files are
+present, copies them recursively into `/data/`. The copy uses `cp -rn`,
+so any file that already exists in `/data` is left untouched. Seeding
+is one-shot insurance, not a sync.
+
+### Layout
+
+The contents of `/share/soundcork/seed/` are merged into `/data/` with
+the same relative path. So if your `data_dir` option is the default
+`/data/soundcork`, your seed files have to live one level deeper to land
+in the right place:
+
+```text
+/share/soundcork/seed/soundcork/<accountId>/Sources.xml
+  -> /data/soundcork/<accountId>/Sources.xml
+```
+
+If you set `data_dir` to plain `/data`, the layout is one-to-one:
+
+```text
+/share/soundcork/seed/<accountId>/Sources.xml
+  -> /data/<accountId>/Sources.xml
+```
+
+Get this wrong and SoundCork will not find the files at the path it
+reads from. The add-on does not move them for you and does not validate
+that they ended up where SoundCork expects.
+
+### What `<accountId>` is, and where to get it
+
+The directory name is **not** something you choose. Upstream calls the
+field "marge account UUID" but the format is a 1-to-20-digit decimal
+number (constraint: `^\d{1,20}$`), supplied by the speaker firmware in
+its `info.xml`. SoundCork uses the value the speaker reports; if the
+seed directory uses a different number, SoundCork will write fresh
+files under the speaker's real id and ignore your seed.
+
+Three ways to learn the right number:
+
+1. **From a previous working SoundCork install.** If you are seeding
+   from a backup, the directory name on disk *is* the account id. Use
+   the same name in `/share/soundcork/seed/`.
+2. **Let SoundCork create it once, then re-use the name.** Boot the
+   speaker against this add-on (after the speaker-side procedure
+   above). On the first request from the speaker, SoundCork calls
+   `create_account(...)` with the speaker's reported id and creates
+   `<data_dir>/<accountId>/`. Stop the add-on, mirror that directory
+   name into `/share/soundcork/seed/...`, and overwrite or extend the
+   files there.
+3. **From the speaker itself.** SSH onto the speaker (same procedure as
+   the override config) and grep for `margeAccountUUID` under
+   `/var/volatile/lib/Bose/PersistenceDataRoot/BoseApp-Persistence/1`.
+   The numeric value of that element is the account id.
+
+If you have multiple Bose accounts (rare), each has its own id and its
+own directory under `data_dir`. Seed each one separately.
+
+### How to use it
+
+1. Stop the add-on.
+2. Use the **Samba share** add-on, **Studio Code Server**, the HAOS
+   File editor, or `scp` to drop your XMLs under
+   `/share/soundcork/seed/...` matching the layout above.
+3. Start the add-on. The startup log lists each filename being copied,
+   for example:
+
+   ```text
+   [soundcork] seeding 3 file(s) from /share/soundcork/seed into /data (existing files preserved)
+   [soundcork] seed: soundcork/<accountId>/Accounts.xml
+   [soundcork] seed: soundcork/<accountId>/Sources.xml
+   [soundcork] seed: soundcork/<accountId>/Recents.xml
+   ```
+
+4. Confirm in `/webui/` that the accounts / speakers / presets show up.
+
+### Caveats
+
+- The wrapper does no schema validation. Garbage XML in `/share` becomes
+  garbage XML in `/data` and SoundCork will fail to parse it. You are
+  responsible for the file contents.
+- File contents are never written to the log; only filenames are.
+- Existing `/data` files are never overwritten. If you need to replace
+  a bad file, delete it from `/data` first (Studio Code Server, the
+  Samba add-on, etc.) and then start the add-on so the seed import
+  fills the gap.
+- It is safe to leave the seed directory in place across restarts. Each
+  run re-imports only the files that are missing in `/data`.
+
 ## Bumping the pinned upstream image
 
 The Dockerfile pins `ghcr.io/timvw/soundcork` by digest:
 
-```
+```dockerfile
 FROM ghcr.io/timvw/soundcork@sha256:78f0b45cf1bc4cbad97b4b96c177c4bc3c8fe30f228514767be3c4393cfba4d7
 ```
 

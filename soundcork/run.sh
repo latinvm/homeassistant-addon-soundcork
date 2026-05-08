@@ -58,6 +58,29 @@ export OIDC_ISSUER_URL="${oidc_issuer_url}"
 export OIDC_CLIENT_ID="${oidc_client_id}"
 export OIDC_CLIENT_SECRET="${oidc_client_secret}"
 
+# Optional manual seed: if /share/soundcork/seed/ exists and contains
+# files, copy them into /data/ with cp -rn (no-clobber) so anything
+# already in /data wins. This is one-shot insurance for the case where
+# the SoundCork "Configure Account" flow fails; it is not a sync.
+SEED_DIR=/share/soundcork/seed
+seed_files=()
+if [[ -d "${SEED_DIR}" ]]; then
+  while IFS= read -r -d '' f; do
+    seed_files+=("${f}")
+  done < <(find "${SEED_DIR}" -type f -print0)
+fi
+
+if (( ${#seed_files[@]} == 0 )); then
+  echo "[soundcork] no seed files found, skipping"
+else
+  echo "[soundcork] seeding ${#seed_files[@]} file(s) from ${SEED_DIR} into /data (existing files preserved)"
+  for f in "${seed_files[@]}"; do
+    rel=${f#"${SEED_DIR}/"}
+    echo "[soundcork] seed: ${rel}"
+  done
+  cp -rn "${SEED_DIR}/." /data/
+fi
+
 # init: false in config.yaml means the supervisor does not inject its own
 # init system. tini reaps zombies and forwards signals so a stop from the
 # UI is a clean SIGTERM to gunicorn rather than a 10-second SIGKILL wait.
