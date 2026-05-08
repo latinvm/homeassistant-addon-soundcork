@@ -1,7 +1,7 @@
-# Test add-on for the optional-basic-auth-admin-mgmt PR branch on
-# latinvm/soundcork. Tracked by tag (not digest) so iterating on the
-# branch image and reinstalling here picks up the new build. Expected
-# to disappear when the upstream PR lands or is rejected.
+# Pinned to a branch tag (not a digest) so rebuilds of the
+# optional-basic-auth-admin-mgmt branch on latinvm/soundcork are picked
+# up by reinstalling or rebuilding the add-on. This add-on tracks an
+# in-flight PR and will be removed once that PR resolves upstream.
 #
 # hadolint global ignore=DL3002
 # Final USER is root by design; matches the production add-on. See
