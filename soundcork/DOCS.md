@@ -3,7 +3,7 @@
 This is the long-form reference shown on the **Documentation** tab. The
 Configuration tab is light on context; this is where the context lives.
 
-## Which SoundCork this wraps, and why
+## Which SoundCork this wraps
 
 The original SoundCork lives at
 [`deborahgu/soundcork`](https://github.com/deborahgu/soundcork) and has
@@ -12,17 +12,15 @@ are open to anyone who can reach the port. On a flat home LAN this is
 usually fine; on a network with an IoT VLAN, a reverse proxy, or guest
 devices, it is not.
 
-This add-on currently pins the
-[`optional-basic-auth-admin-mgmt`](https://github.com/latinvm/soundcork/tree/optional-basic-auth-admin-mgmt)
-branch on the [`latinvm/soundcork`](https://github.com/latinvm/soundcork)
-fork, which adds **optional** HTTP Basic auth on `/admin` and `/mgmt`
-via two env vars (`ADMIN_BASIC_AUTH_USER` / `ADMIN_BASIC_AUTH_PASSWORD`).
-Leaving both blank disables auth, matching upstream's open default. A
-PR for this change is in flight upstream; once it lands, this add-on
-will repoint at upstream's published image and pin a digest. Treat the
-current image pin as a moving target until that happens.
+This add-on pins
+[`ghcr.io/latinvm/soundcork:optional-basic-auth-admin-mgmt`](https://github.com/latinvm/soundcork/tree/optional-basic-auth-admin-mgmt),
+a fork of `deborahgu/soundcork` that adds **optional** HTTP Basic auth
+on `/admin` and `/mgmt` via two env vars (`ADMIN_BASIC_AUTH_USER` /
+`ADMIN_BASIC_AUTH_PASSWORD`). Leaving both blank disables auth,
+matching `deborahgu`'s open default.
 
-For the rest of this document, "upstream" means the latinvm PR branch.
+For the rest of this document, "upstream" means
+[`latinvm/soundcork`](https://github.com/latinvm/soundcork).
 
 ## Option reference
 
@@ -278,51 +276,46 @@ own directory under `data_dir`. Seed each one separately.
 
 ## Updating the upstream image
 
-The Dockerfile currently pins a **mutable branch tag** while the basic-
-auth feature is in PR review:
+The Dockerfile pins a tag on the `latinvm/soundcork` fork:
 
 ```dockerfile
 FROM ghcr.io/latinvm/soundcork:optional-basic-auth-admin-mgmt
 ```
 
-This is deliberate: the PR branch is rebuilt as it iterates, and the
-add-on needs to follow. The trade-off is loss of reproducibility — two
-installs of the same add-on `version:` can resolve to different image
-contents. Acceptable for a preview, not acceptable long-term.
+The tag is mutable: pushing to that branch and waiting for the
+`docker-publish.yml` workflow to go green updates the image content
+without changing the tag.
 
-To pull the current branch build into a running install:
+To pull a freshly-rebuilt image into a running install without a
+`version:` bump:
 
 1. In the HA add-on UI, three-dot menu on the SoundCork add-on →
-   **Rebuild**. This re-resolves the tag and rebuilds the wrapper
-   layer. (If your HA frontend doesn't surface Rebuild reliably,
-   uninstall and reinstall — slower but unambiguous.)
+   **Rebuild**. Re-resolves the tag and rebuilds the wrapper layer.
+   If Rebuild misbehaves on your HA frontend version, uninstall and
+   reinstall — slower but unambiguous.
 
-To follow a brand-new branch image after a `version:` bump:
+To ship a wrapper change (config schema, run.sh, Dockerfile) and have
+HA show an **Update** badge:
 
 1. Bump `version:` in `soundcork/config.yaml`.
-2. Push to `main`. HA shows an **Update** badge on the installed
-   add-on within a few minutes; clicking Update re-resolves the tag.
+2. Add a `CHANGELOG.md` entry describing what changed (the visible
+   shape of the user contract: option keys, defaults, wrapper
+   behaviour). Bumps that exist only to re-pull a moving tag don't
+   need a changelog entry.
+3. Push to `main`. HA shows the Update badge on the installed add-on
+   within a few minutes.
 
-When the upstream PR lands and the basic-auth feature is in
-[`deborahgu/soundcork`](https://github.com/deborahgu/soundcork)'s
-published image:
+To switch to a digest pin (when the basic-auth code stabilises and you
+want reproducible installs), read the index digest with:
 
-1. Change the `FROM` line to
-   `ghcr.io/deborahgu/soundcork@sha256:<index-digest>`. Read the index
-   digest with:
+```sh
+docker buildx imagetools inspect \
+  ghcr.io/latinvm/soundcork:optional-basic-auth-admin-mgmt | head -3
+```
 
-   ```sh
-   docker buildx imagetools inspect ghcr.io/deborahgu/soundcork:main \
-     | head -3
-   ```
-
-   Use the multi-arch index digest, not a per-arch sub-digest, so a
-   single line resolves on both `amd64` and `aarch64`.
-2. Bump `version:` and update the comment block at the top of the
-   Dockerfile to drop the "tag-tracking" framing.
-3. From that point forward, the bump procedure is "edit digest, bump
-   version, push" — the same one-line discipline used by most pinned-
-   digest HA add-ons.
+Use the multi-arch index digest, not a per-arch sub-digest. Replace
+the `:tag` portion of `FROM` with `@sha256:...`, bump `version:`, and
+update the comment block at the top of the Dockerfile.
 
 ## Assumptions
 

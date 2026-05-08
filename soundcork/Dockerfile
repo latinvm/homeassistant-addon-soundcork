@@ -1,10 +1,7 @@
-# Tracks the optional-basic-auth-admin-mgmt branch on the latinvm fork
-# of SoundCork (a PR pending upstream that adds optional HTTP Basic auth
-# on /admin and /mgmt). Pinned by tag, not digest, so a rebuild of the
-# branch image is picked up by reinstalling or rebuilding the add-on.
-# When the PR lands upstream, switch this to a digest pin against the
-# upstream :main image and remove this comment block. See DOCS.md
-# ("Updating the upstream image").
+# Pinned to a branch tag (not a digest) on the latinvm fork. A rebuild
+# of the branch image is picked up by reinstalling or rebuilding the
+# add-on. See DOCS.md ("Updating the upstream image") for the bump
+# procedure.
 #
 # hadolint global ignore=DL3002
 # Final USER is root by design; see DOCS.md "Known limitations".
