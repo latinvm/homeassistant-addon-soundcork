@@ -1,5 +1,5 @@
 name: SoundCork
-version: 0.2.0
+version: 0.2.1
 slug: soundcork
 description: Self-hosted replacement for the Bose SoundTouch cloud, with optional HTTP Basic auth on /admin and /mgmt
 url: https://github.com/latinvm/homeassistant-addon-soundcork
