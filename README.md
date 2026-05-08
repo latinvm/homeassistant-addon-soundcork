@@ -1,8 +1,10 @@
 # SoundCork add-on for Home Assistant
 
-A thin Home Assistant add-on that runs [SoundCork](https://github.com/timvw/soundcork)
+A thin Home Assistant add-on that runs [SoundCork](https://github.com/deborahgu/soundcork)
 on Home Assistant OS so Bose SoundTouch 10 / 20 / 30 speakers keep working
-after Bose shut down the SoundTouch cloud on 6 May 2026.
+after Bose shut down the SoundTouch cloud on 6 May 2026. Adds optional
+HTTP Basic auth on `/admin` and `/mgmt` via a fork that has a PR pending
+upstream.
 
 ## Quick install
 
@@ -27,22 +29,35 @@ pre-filled, then **Add**, then install **SoundCork** from the store.
 3. Paste `https://github.com/latinvm/homeassistant-addon-soundcork` and click **Add**.
 
 After the repository is added, open **SoundCork**, click **Install**,
-fill in `base_url`, `MGMT_USERNAME`, and `MGMT_PASSWORD` on the
-**Configuration** tab, and start the add-on.
+fill in `base_url` on the **Configuration** tab, optionally set
+`ADMIN_BASIC_AUTH_USER` and `ADMIN_BASIC_AUTH_PASSWORD` to gate `/admin`
+and `/mgmt` (leave both blank to disable auth), and start the add-on.
 
 ## What this is, and what it is not
 
 This repository contains the **add-on wrapper only**. It does not contain
-SoundCork. At install time the supervisor pulls a pinned upstream Docker
-image (`ghcr.io/timvw/soundcork`) and runs it under the supervisor's
-process and volume management.
+SoundCork. At install time the supervisor pulls an upstream Docker
+image and runs it under the supervisor's process and volume management.
+
+The image is currently
+`ghcr.io/latinvm/soundcork:optional-basic-auth-admin-mgmt`, the
+[`optional-basic-auth-admin-mgmt`](https://github.com/latinvm/soundcork/tree/optional-basic-auth-admin-mgmt)
+branch of the [`latinvm/soundcork`](https://github.com/latinvm/soundcork)
+fork. That branch is in PR review against the upstream
+[`deborahgu/soundcork`](https://github.com/deborahgu/soundcork). Once
+the PR lands, the add-on will repoint at the upstream image and pin a
+digest. See [`soundcork/DOCS.md`](soundcork/DOCS.md) for the rationale
+and the cutover plan.
 
 - SoundCork itself: bug reports, feature requests, protocol questions go to
-  [timvw/soundcork](https://github.com/timvw/soundcork) (the actively
-  maintained Docker fork) or the original
-  [deborahgu/soundcork](https://github.com/deborahgu/soundcork).
+  [deborahgu/soundcork](https://github.com/deborahgu/soundcork)
+  (upstream).
+- The basic-auth shim specifically: discussion goes on the open PR on
+  the upstream repo; while that's in flight, issues with how the shim
+  behaves can also go on
+  [latinvm/soundcork](https://github.com/latinvm/soundcork).
 - This add-on wrapper: install issues, option schema bugs, supervisor
-  integration problems, image pinning bumps go here.
+  integration problems, image pin bumps go here.
 
 If you are not sure where a problem belongs, it is almost always upstream.
 
@@ -56,19 +71,6 @@ speakers. The speaker-side procedure (USB stick with `remote_services`,
 SSH onto the speaker, edit `/mnt/nv/OverrideSdkPrivateCfg.xml` to point at
 the add-on) is documented in [`soundcork/DOCS.md`](soundcork/DOCS.md).
 
-## Companion add-on: `SoundCork (Basic Auth)`
-
-In addition to the main **SoundCork** add-on, this repo currently ships
-a second entry, **SoundCork (Basic Auth)** (slug `soundcork_basicauth`,
-directory [`soundcork-basicauth/`](soundcork-basicauth/)). It tracks the
-[`optional-basic-auth-admin-mgmt`](https://github.com/latinvm/soundcork/tree/optional-basic-auth-admin-mgmt)
-branch on the `latinvm/soundcork` fork — a PR going to upstream that
-puts optional HTTP Basic auth in front of `/admin` and `/mgmt` — and
-exposes its HTTP API on host port `8001` so it can run alongside the
-main add-on on `8000`. It will be removed from this repo once the
-upstream PR lands or is rejected; treat it as a preview, not a long-
-term option.
-
 ## Architectures
 
 `amd64` and `aarch64` only, matching the upstream image.
@@ -76,8 +78,10 @@ term option.
 ## Versioning
 
 Add-on version (in `soundcork/config.yaml`) is independent from the
-upstream SoundCork release. The upstream image is pinned by digest. See
-`soundcork/DOCS.md` for how to bump it.
+upstream SoundCork release. The upstream image is currently pinned to
+a mutable branch tag while the basic-auth PR is in review; once the PR
+lands, the pin will become a digest. See `soundcork/DOCS.md` for the
+update procedure in both modes.
 
 ## License
 

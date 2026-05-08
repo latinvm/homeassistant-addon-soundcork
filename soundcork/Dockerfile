@@ -1,17 +1,19 @@
-# Pinned by digest, not :main, so add-on rebuilds are reproducible and the
-# upstream tag floating does not silently change behaviour. See DOCS.md
-# ("Bumping the pinned upstream image") for the bump procedure.
+# Tracks the optional-basic-auth-admin-mgmt branch on the latinvm fork
+# of SoundCork (a PR pending upstream that adds optional HTTP Basic auth
+# on /admin and /mgmt). Pinned by tag, not digest, so a rebuild of the
+# branch image is picked up by reinstalling or rebuilding the add-on.
+# When the PR lands upstream, switch this to a digest pin against the
+# upstream :main image and remove this comment block. See DOCS.md
+# ("Updating the upstream image").
 #
 # hadolint global ignore=DL3002
 # Final USER is root by design; see DOCS.md "Known limitations".
-FROM ghcr.io/timvw/soundcork@sha256:78f0b45cf1bc4cbad97b4b96c177c4bc3c8fe30f228514767be3c4393cfba4d7
+FROM ghcr.io/latinvm/soundcork:optional-basic-auth-admin-mgmt
 
-# Wrapper additions need root. Upstream's USER (appuser, uid 1000) is
-# replaced rather than restored at the end: Home Assistant's /data bind
-# mount is created at runtime owned by root, and the wrapper writes
-# options.json into it. Running gunicorn as root is the same posture
-# every other root-mode HA add-on takes; document this trade-off rather
-# than work around it with gosu/setpriv gymnastics.
+# Wrapper additions need root, and upstream already ships USER root in
+# this branch (verified with `docker inspect`), so this line is a
+# defensive restate rather than a downgrade. /data is created at runtime
+# owned by root and the wrapper writes options.json into it.
 USER root
 
 # hadolint ignore=DL3008
