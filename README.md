@@ -56,6 +56,18 @@ speakers. The speaker-side procedure (USB stick with `remote_services`,
 SSH onto the speaker, edit `/mnt/nv/OverrideSdkPrivateCfg.xml` to point at
 the add-on) is documented in [`soundcork/DOCS.md`](soundcork/DOCS.md).
 
+## Throwaway test add-on: `SoundCork (basic-auth test)`
+
+In addition to the production **SoundCork** add-on, this repo currently
+ships a second entry called **SoundCork (basic-auth test)** (slug
+`soundcork_basicauth`, directory [`soundcork-basicauth/`](soundcork-basicauth/)).
+It tracks the [`optional-basic-auth-admin-mgmt`](https://github.com/latinvm/soundcork/tree/optional-basic-auth-admin-mgmt)
+branch on the `latinvm/soundcork` fork (a PR going to upstream that puts
+optional HTTP Basic auth in front of `/admin` and `/mgmt`) and exposes
+its HTTP API on host port `8001` so it can run alongside the production
+add-on on `8000`. It is expected to be deleted from this repo once the
+upstream PR lands or is rejected; do not depend on it.
+
 ## Architectures
 
 `amd64` and `aarch64` only, matching the upstream image.

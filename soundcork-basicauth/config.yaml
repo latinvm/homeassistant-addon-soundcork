@@ -1,0 +1,27 @@
+name: SoundCork (basic-auth test)
+version: 0.0.1
+slug: soundcork_basicauth
+description: Throwaway test add-on for the optional-basic-auth-admin-mgmt PR (latinvm/soundcork fork)
+url: https://github.com/latinvm/homeassistant-addon-soundcork
+arch:
+  - amd64
+  - aarch64
+init: false
+startup: services
+boot: auto
+ports:
+  8000/tcp: 8001
+ports_description:
+  8000/tcp: SoundCork HTTP API (test add-on, host port 8001 to coexist with the production add-on)
+map:
+  - share:rw
+options:
+  base_url: ""
+  ADMIN_BASIC_AUTH_USER: ""
+  ADMIN_BASIC_AUTH_PASSWORD: ""
+  data_dir: /data/soundcork
+schema:
+  base_url: str
+  ADMIN_BASIC_AUTH_USER: str?
+  ADMIN_BASIC_AUTH_PASSWORD: password?
+  data_dir: str
