@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.2 - 2026-05-08
+
+- Sets `host_network: true`. SoundCork's `/scan` endpoint discovers
+  speakers via mDNS (`_soundtouch._tcp.local`) and the soft-switch
+  flow needs to reach each speaker's HTTP API on port `8090` on the
+  LAN. Bridge networking blocks the multicast announces and was also
+  observed to fail outbound to speaker ports in practice; sharing the
+  host network namespace is the supported posture for this kind of
+  LAN-discovery service.
+
 ## 0.2.0 - 2026-05-08
 
 - Pins `ghcr.io/latinvm/soundcork:optional-basic-auth-admin-mgmt`, a
