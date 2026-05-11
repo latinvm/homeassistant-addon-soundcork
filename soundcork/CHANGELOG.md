@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.3.1 - 2026-05-11
+
+- Logs the resolved `base_url` and `data_dir` once on startup so the
+  most common silent-failure mode (wrong `base_url` after remapping
+  the host port on the Network tab) is visible in the add-on log.
+- Rejects a `base_url` that does not start with `http://` or
+  `https://` at startup, rather than letting a scheme-less value
+  propagate to every speaker.
+- Documentation corrections: `/webui/` does not exist on upstream
+  `deborahgu/soundcork`; it was a route name from the now-removed
+  `latinvm` fork that leaked into our docs. The real human-facing
+  paths are `/miniapp` / `/miniapp/dashboard` (post-setup) and
+  `/admin/` (setup). The bare `/` is a 303 redirect to one of the
+  two, not a 200-no-body. No sidebar link is added: the miniapp
+  dashboard is a setup-and-occasional-use tool, not a daily UI.
+
 ## 0.3.0 - 2026-05-11
 
 - **Breaking.** Drops the `latinvm/soundcork` fork and pins

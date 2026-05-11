@@ -26,22 +26,25 @@ After **Save**, click **Start**. Logs appear on the **Log** tab.
 
 ## Open the UI
 
-Once the add-on is running, open `http://<your-ha-ip>:8000/webui/` in a
-browser. That is the human-facing console for managing accounts,
-presets, and speakers.
+Once the add-on is running, open `http://<your-ha-ip>:8000/` in a
+browser. The root path is a 303 redirect: it lands on `/admin/` while
+any speaker still needs to be switched to SoundCork, and on
+`/miniapp/dashboard` once every known speaker is switched.
 
-The bare `/` path returns a trivial 200 with no UI; that is by design,
-not a misconfiguration. Other useful paths:
+The deliberately-unlinked link to the add-on is **not** added to the
+Home Assistant sidebar; treat the dashboard as a setting-up tool, not
+a daily-driver UI. Useful paths:
 
-- `/webui/` -> main web UI (start here).
+- `/miniapp/dashboard` -> human-facing console for play / stop /
+  presets once speakers are configured.
 - `/admin/` -> per-device admin actions (switch a device to SoundCork,
   add device by id). Trailing slash required.
-- `/mgmt/...` -> JSON management API (Spotify init / callback).
+- `/mgmt/spotify/...` -> Spotify account init / callback / confirm.
 
 `/docs`, `/redoc`, and `/openapi.json` are disabled by upstream and will
 404. The Bose speakers themselves call other paths (`/marge/...`,
-`/bmx/...`, account / source / preset endpoints). You do not browse
-those manually.
+`/bmx/...`, `/scan`, `/add_device/{id}`, account / source / preset
+endpoints). You do not browse those manually.
 
 None of these routes are authenticated. SoundCork ships open by
 design: the destructive `/admin` actions only work against speakers

@@ -7,7 +7,7 @@ Configuration tab is light on context; this is where the context lives.
 
 This add-on pins `ghcr.io/deborahgu/soundcork:main`, the image
 published from the [`deborahgu/soundcork`](https://github.com/deborahgu/soundcork)
-default branch. There is **no management authentication**: `/webui/`,
+default branch. There is **no management authentication**: `/miniapp`,
 `/admin/`, and `/mgmt/...` are open to anyone who can reach the port.
 
 That is intentional, not an oversight. The destructive `/admin`
@@ -56,7 +56,9 @@ on the **Network** tab, change `base_url` to match.
 >   already taken on the HA host and you remap to `8123`), you **must**
 >   update `base_url` to match (`http://<HA-IP>:8123`). The container
 >   cannot detect this; the speakers will happily dial the wrong port
->   and fail silently with no error in the add-on log.
+>   with no error from the container itself. The wrapper logs the
+>   resolved `base_url` once on startup (`[soundcork] base_url=... data_dir=...`)
+>   so you can eyeball it against the Network tab.
 > - Do not add a `port` option here. The Network tab is the supported
 >   mechanism. Keeping a single source of truth (the Network tab) and
 >   one mirror (`base_url`) is the whole contract.
@@ -74,11 +76,17 @@ Default: `/data/soundcork`.
 
 | Path | Purpose |
 | --- | --- |
-| `/webui/` | Main human-facing web UI. Start here. |
+| `/` | 303 redirect. Lands on `/admin/` while any speaker still needs to be switched to SoundCork, and on `/miniapp` once they all are. |
+| `/miniapp`, `/miniapp/dashboard`, `/miniapp/login`, `/miniapp/play`, `/miniapp/stop`, etc. | Human-facing console for play / stop / presets / device selection once speakers are configured. `/miniapp/dashboard` is the main page. |
 | `/admin/` | Per-device admin actions (switch a device to SoundCork, add device by ID). Trailing slash required. |
-| `/mgmt/...` | JSON management API (Spotify init / callback). |
-| `/marge/...`, `/bmx/...`, account / source / preset endpoints | Called by the speakers themselves. Do not browse manually. |
-| `/` | Trivial landing handler that returns 200 with no UI. By design, not a misconfiguration. |
+| `/mgmt/spotify/init`, `/mgmt/spotify/callback`, `/mgmt/spotify/confirm`, `/mgmt/spotify/accounts` | Spotify account JSON management endpoints. |
+| `/scan`, `/scan_recents`, `/add_device/{id}`, `/marge/...`, `/bmx/...`, `/media/...`, `/updates/soundtouch`, `/v1/scmudc/...`, `/v1/stapp/...` | Called by the speakers themselves (and a couple of setup helpers `/admin` calls into). Do not browse manually. |
+
+This add-on deliberately does **not** add a sidebar link to
+`/miniapp/dashboard`. The dashboard is useful for setup and the
+occasional manual play / stop, but it is not a daily-driver UI;
+day-to-day playback should run through the Bose app or whatever
+SoundTouch integration you use, not through the miniapp.
 
 None of these routes are authenticated. See "Which SoundCork this
 wraps" above for why HTTP auth is not the right boundary here.
