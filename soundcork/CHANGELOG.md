@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.2 - 2026-05-11
+
+- Refreshes `icon.png` and `logo.png` against the updated source
+  artwork. The logo now carries a "Home Assistant App" subtitle under
+  the SoundCork wordmark, separated by a thin divider in the speaker
+  body tone. No functional change.
+
 ## 0.5.1 - 2026-05-11
 
 - Adds `icon.png` (128x128) and `logo.png` (600x240) so the add-on
