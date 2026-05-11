@@ -1,9 +1,9 @@
 # SoundCork add-on for Home Assistant
 
-A thin Home Assistant add-on that runs [SoundCork](https://github.com/latinvm/soundcork)
-on Home Assistant OS so Bose SoundTouch 10 / 20 / 30 speakers keep
-working after Bose shut down the SoundTouch cloud on 6 May 2026. The
-fork adds optional HTTP Basic auth on `/admin` and `/mgmt`.
+A thin Home Assistant add-on that runs
+[SoundCork](https://github.com/deborahgu/soundcork) on Home Assistant
+OS so Bose SoundTouch 10 / 20 / 30 speakers keep working after Bose
+shut down the SoundTouch cloud on 6 May 2026.
 
 ## Quick install
 
@@ -28,23 +28,17 @@ pre-filled, then **Add**, then install **SoundCork** from the store.
 3. Paste `https://github.com/latinvm/homeassistant-addon-soundcork` and click **Add**.
 
 After the repository is added, open **SoundCork**, click **Install**,
-fill in `base_url` on the **Configuration** tab, optionally set
-`ADMIN_BASIC_AUTH_USER` and `ADMIN_BASIC_AUTH_PASSWORD` to gate `/admin`
-and `/mgmt` (leave both blank to disable auth), and start the add-on.
+fill in `base_url` on the **Configuration** tab, and start the add-on.
 
 ## What this is, and what it is not
 
 This repository contains the **add-on wrapper only**. It does not
 contain SoundCork. At install time the supervisor pulls
-`ghcr.io/latinvm/soundcork:optional-basic-auth-admin-mgmt` (a fork of
-[`deborahgu/soundcork`](https://github.com/deborahgu/soundcork) that
-adds optional HTTP Basic auth on `/admin` and `/mgmt`) and runs it
-under the supervisor's process and volume management.
+`ghcr.io/deborahgu/soundcork:main` and runs it under the supervisor's
+process and volume management.
 
 - SoundCork itself: bug reports, feature requests, protocol questions
-  go to [latinvm/soundcork](https://github.com/latinvm/soundcork) or
-  upstream
-  [deborahgu/soundcork](https://github.com/deborahgu/soundcork).
+  go to [deborahgu/soundcork](https://github.com/deborahgu/soundcork).
 - This add-on wrapper: install issues, option schema bugs, supervisor
   integration problems, image pin bumps go here.
 
@@ -65,9 +59,10 @@ the add-on) is documented in [`soundcork/DOCS.md`](soundcork/DOCS.md).
 ## Versioning
 
 Add-on version (in `soundcork/config.yaml`) is independent from the
-upstream SoundCork release. The upstream image is pinned to a branch
-tag on the [`latinvm/soundcork`](https://github.com/latinvm/soundcork)
-fork. See `soundcork/DOCS.md` for the update procedure.
+upstream SoundCork release. The upstream image is pinned to the
+`:main` moving tag of
+[`deborahgu/soundcork`](https://github.com/deborahgu/soundcork). See
+`soundcork/DOCS.md` for the update procedure.
 
 ## License
 

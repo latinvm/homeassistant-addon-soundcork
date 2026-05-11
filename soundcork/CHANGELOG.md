@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.3.0 - 2026-05-11
+
+- **Breaking.** Drops the `latinvm/soundcork` fork and pins
+  `ghcr.io/deborahgu/soundcork:main` directly. The fork only existed
+  to add optional HTTP Basic auth on `/admin` and `/mgmt`; the auth
+  was defence in depth at best (the destructive `/admin` actions SSH
+  into speakers that already permit password-less root from anywhere
+  on the same LAN), so the wrapper now matches upstream's open
+  posture.
+- **Breaking.** Removes the `ADMIN_BASIC_AUTH_USER` and
+  `ADMIN_BASIC_AUTH_PASSWORD` options. The supervisor rejects unknown
+  options on startup, so anyone who had these set must clear them on
+  the Configuration tab before starting 0.3.0.
+- No behaviour change for `/webui/`, `/admin`, `/mgmt`, the speaker
+  endpoints, seed import, or `data_dir` validation.
+
 ## 0.2.2 - 2026-05-08
 
 - Sets `host_network: true`. SoundCork's `/scan` endpoint discovers

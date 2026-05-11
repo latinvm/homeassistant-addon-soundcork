@@ -10,8 +10,6 @@ fi
 
 base_url=$(jq -r '.base_url // ""' "${OPTIONS_FILE}")
 data_dir=$(jq -r '.data_dir // "/data/soundcork"' "${OPTIONS_FILE}")
-admin_basic_auth_user=$(jq -r '.ADMIN_BASIC_AUTH_USER // ""' "${OPTIONS_FILE}")
-admin_basic_auth_password=$(jq -r '.ADMIN_BASIC_AUTH_PASSWORD // ""' "${OPTIONS_FILE}")
 
 if [[ -z "${base_url}" ]]; then
   echo "[soundcork] base_url is required (set it on the Configuration tab)" >&2
@@ -32,8 +30,6 @@ mkdir -p "${data_dir}"
 
 export base_url
 export data_dir
-export ADMIN_BASIC_AUTH_USER="${admin_basic_auth_user}"
-export ADMIN_BASIC_AUTH_PASSWORD="${admin_basic_auth_password}"
 
 # Optional manual seed: if /share/soundcork/seed/ exists and contains
 # files, copy them into /data/ with cp -rn (no-clobber) so anything

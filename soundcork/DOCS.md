@@ -5,22 +5,22 @@ Configuration tab is light on context; this is where the context lives.
 
 ## Which SoundCork this wraps
 
-The original SoundCork lives at
-[`deborahgu/soundcork`](https://github.com/deborahgu/soundcork) and has
-**no management authentication**: `/webui/`, `/admin/`, and `/mgmt/...`
-are open to anyone who can reach the port. On a flat home LAN this is
-usually fine; on a network with an IoT VLAN, a reverse proxy, or guest
-devices, it is not.
+This add-on pins `ghcr.io/deborahgu/soundcork:main`, the image
+published from the [`deborahgu/soundcork`](https://github.com/deborahgu/soundcork)
+default branch. There is **no management authentication**: `/webui/`,
+`/admin/`, and `/mgmt/...` are open to anyone who can reach the port.
 
-This add-on pins
-[`ghcr.io/latinvm/soundcork:optional-basic-auth-admin-mgmt`](https://github.com/latinvm/soundcork/tree/optional-basic-auth-admin-mgmt),
-a fork of `deborahgu/soundcork` that adds **optional** HTTP Basic auth
-on `/admin` and `/mgmt` via two env vars (`ADMIN_BASIC_AUTH_USER` /
-`ADMIN_BASIC_AUTH_PASSWORD`). Leaving both blank disables auth,
-matching `deborahgu`'s open default.
+That is intentional, not an oversight. The destructive `/admin`
+actions (switch a device to SoundCork, add device by id) work by
+SSH-ing into the speaker as `root` over the password-less root shell
+that the one-time `remote_services` USB unlock leaves open. Anyone who
+can reach `/admin` can also reach the speaker on port 22 and run the
+same commands directly, so HTTP auth on top would be defence in depth
+rather than a real boundary. Treat the SoundCork port as you treat
+speaker port 22 — only expose it to networks you trust.
 
 For the rest of this document, "upstream" means
-[`latinvm/soundcork`](https://github.com/latinvm/soundcork).
+[`deborahgu/soundcork`](https://github.com/deborahgu/soundcork).
 
 ## Option reference
 
@@ -61,27 +61,6 @@ on the **Network** tab, change `base_url` to match.
 >   mechanism. Keeping a single source of truth (the Network tab) and
 >   one mirror (`base_url`) is the whole contract.
 
-### `ADMIN_BASIC_AUTH_USER` and `ADMIN_BASIC_AUTH_PASSWORD` (optional, strings)
-
-HTTP Basic auth credentials guarding `/admin` and `/mgmt`. The schema
-marks the password as `password` so the supervisor masks it in the UI.
-
-These are **optional**. If either is empty the auth shim short-circuits
-and the routes are reachable without credentials, matching the open
-default of `deborahgu/soundcork`. To turn auth on, set both. To turn it
-off, blank both and restart.
-
-The casing of these option keys is uppercase to match how the PR branch
-documents the env vars. Upstream's `pydantic-settings` reads env vars
-case-insensitively, so this is convention rather than a hard requirement.
-Lowercase here would also work; the wrapper exports them uppercase
-either way.
-
-Speaker-facing routes (`/marge/...`, `/bmx/...`, account / source /
-preset endpoints) are **not** behind this auth. Speakers reach the API
-directly with no credentials, by design — adding auth there would
-require reflashing every speaker.
-
 ### `data_dir` (required, string)
 
 Path inside the container where SoundCork persists state. Must be under
@@ -95,11 +74,14 @@ Default: `/data/soundcork`.
 
 | Path | Purpose |
 | --- | --- |
-| `/webui/` | Main human-facing web UI. Start here. Not gated by `ADMIN_BASIC_AUTH_*` in this build. |
-| `/admin/` | Per-device admin actions (switch a device to SoundCork, add device by ID). Trailing slash required. Gated by `ADMIN_BASIC_AUTH_*` when both are set. |
-| `/mgmt/...` | JSON management API (accounts, Spotify init/callback). Gated by `ADMIN_BASIC_AUTH_*` when both are set. |
+| `/webui/` | Main human-facing web UI. Start here. |
+| `/admin/` | Per-device admin actions (switch a device to SoundCork, add device by ID). Trailing slash required. |
+| `/mgmt/...` | JSON management API (Spotify init / callback). |
 | `/marge/...`, `/bmx/...`, account / source / preset endpoints | Called by the speakers themselves. Do not browse manually. |
 | `/` | Trivial landing handler that returns 200 with no UI. By design, not a misconfiguration. |
+
+None of these routes are authenticated. See "Which SoundCork this
+wraps" above for why HTTP auth is not the right boundary here.
 
 `/docs` (FastAPI auto-generated Swagger) is **not** exposed by upstream
 in this build; do not rely on it for endpoint discovery. Read the source
@@ -165,16 +147,15 @@ It now talks to SoundCork instead of the Bose cloud.
 
 For deeper protocol details, recovery if the override is wrong, and
 device-discovery quirks, see the
-[`deborahgu/soundcork`](https://github.com/deborahgu/soundcork) README
-(the upstream of the fork this add-on currently tracks).
+[`deborahgu/soundcork`](https://github.com/deborahgu/soundcork) README.
 
 ## Known limitations
 
 - Only `amd64` and `aarch64` are supported. Upstream does not publish
   other architectures.
 - The wrapper runs gunicorn as `root`. Upstream also runs as root in
-  the currently-pinned branch image, so this is no longer a divergence,
-  but it is worth knowing in case a future upstream change introduces a
+  the currently-pinned image, so this is no longer a divergence, but
+  it is worth knowing in case a future upstream change introduces a
   non-root user that the wrapper's `USER root` line would silently
   override.
 - Spotify priming, Music Assistant integration, and multi-room features
@@ -282,15 +263,14 @@ own directory under `data_dir`. Seed each one separately.
 
 ## Updating the upstream image
 
-The Dockerfile pins a tag on the `latinvm/soundcork` fork:
+The Dockerfile pins the upstream moving tag:
 
 ```dockerfile
-FROM ghcr.io/latinvm/soundcork:optional-basic-auth-admin-mgmt
+FROM ghcr.io/deborahgu/soundcork:main
 ```
 
-The tag is mutable: pushing to that branch and waiting for the
-`docker-publish.yml` workflow to go green updates the image content
-without changing the tag.
+`:main` is mutable: each push to `main` in `deborahgu/soundcork`
+republishes the image under the same tag.
 
 To pull a freshly-rebuilt image into a running install without a
 `version:` bump:
@@ -311,23 +291,24 @@ HA show an **Update** badge:
 3. Push to `main`. HA shows the Update badge on the installed add-on
    within a few minutes.
 
-To switch to a digest pin (when the basic-auth code stabilises and you
-want reproducible installs), read the index digest with:
+To switch to a digest pin when you want reproducible installs, read
+the index digest with:
 
 ```sh
 docker buildx imagetools inspect \
-  ghcr.io/latinvm/soundcork:optional-basic-auth-admin-mgmt | head -3
+  ghcr.io/deborahgu/soundcork:main | head -3
 ```
 
 Use the multi-arch index digest, not a per-arch sub-digest. Replace
 the `:tag` portion of `FROM` with `@sha256:...`, bump `version:`, and
-update the comment block at the top of the Dockerfile.
+update the comment block at the top of the Dockerfile. Upstream also
+publishes immutable `sha-<short>` tags per commit if you want a
+human-readable pin instead of a digest.
 
 ## Assumptions
 
-These were verified against the branch image
-`ghcr.io/latinvm/soundcork:optional-basic-auth-admin-mgmt` on
-2026-05-08:
+These were verified against the upstream image
+`ghcr.io/deborahgu/soundcork:main` on 2026-05-11:
 
 - `WORKDIR` is `/app/soundcork` and the gunicorn module path is
   `main:app` (not `app:app` as one issue thread suggested). Confirmed.
@@ -336,8 +317,4 @@ These were verified against the branch image
 - Listening port is `8000`. Mapped to host `8000` by default in
   `config.yaml`.
 - Env var keys are read case-insensitively by `pydantic-settings`. The
-  wrapper exports the casing documented in the PR
-  (lowercase `base_url` / `data_dir`, uppercase `ADMIN_BASIC_AUTH_*`).
-- The auth shim treats either `ADMIN_BASIC_AUTH_USER` or
-  `ADMIN_BASIC_AUTH_PASSWORD` being empty as "auth disabled" — same
-  open posture as `deborahgu/soundcork` upstream.
+  wrapper exports lowercase `base_url` and `data_dir`.

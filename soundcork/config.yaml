@@ -1,7 +1,7 @@
 name: SoundCork
-version: 0.2.2
+version: 0.3.0
 slug: soundcork
-description: Self-hosted replacement for the Bose SoundTouch cloud, with optional HTTP Basic auth on /admin and /mgmt
+description: Self-hosted replacement for the Bose SoundTouch cloud
 url: https://github.com/latinvm/homeassistant-addon-soundcork
 arch:
   - amd64
@@ -18,11 +18,7 @@ map:
   - share:rw
 options:
   base_url: ""
-  ADMIN_BASIC_AUTH_USER: ""
-  ADMIN_BASIC_AUTH_PASSWORD: ""
   data_dir: /data/soundcork
 schema:
   base_url: str
-  ADMIN_BASIC_AUTH_USER: str?
-  ADMIN_BASIC_AUTH_PASSWORD: password?
   data_dir: str
