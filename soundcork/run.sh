@@ -13,6 +13,22 @@ data_dir=$(jq -r '.data_dir // "/data/soundcork"' "${OPTIONS_FILE}")
 
 if [[ -z "${base_url}" ]]; then
   echo "[soundcork] base_url is required (set it on the Configuration tab)" >&2
+
+  # Best-effort suggestion using the supervisor's view of the host's primary
+  # IP. Speakers may be on a different VLAN than HA's primary interface, so
+  # this is a hint, not an auto-fill. Silently skipped if the supervisor API
+  # is unavailable (e.g. running the image outside HA for debugging).
+  if [[ -n "${SUPERVISOR_TOKEN:-}" ]]; then
+    suggested_ip=$(curl -fsS \
+      -H "Authorization: Bearer ${SUPERVISOR_TOKEN}" \
+      "http://supervisor/network/info" 2>/dev/null \
+      | jq -r '.data.interfaces[]? | select(.primary == true) | .ipv4.address[0] // empty' 2>/dev/null \
+      | cut -d/ -f1 | head -1)
+    if [[ -n "${suggested_ip:-}" ]]; then
+      echo "[soundcork] suggestion: http://${suggested_ip}:8000  (HA primary IP, default port mapping)" >&2
+    fi
+  fi
+
   exit 1
 fi
 
@@ -66,6 +82,24 @@ else
   done
   cp -rn "${SEED_DIR}/." /data/
 fi
+
+# Background self-check: a few seconds after gunicorn comes up, GET base_url
+# from inside the container and log the result. Catches host/port mismatches
+# the scheme regex above cannot see (wrong IP, wrong port after a Network-tab
+# remap, reverse proxy misconfigured). Reparented to tini once exec replaces
+# this shell, so tini reaps it cleanly on exit.
+(
+  sleep 5
+  http_code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 5 "${base_url}/" 2>/dev/null || echo "000")
+  if [[ "${http_code}" == "000" ]]; then
+    echo "[soundcork] self-check WARNING: ${base_url}/ unreachable from inside the container" >&2
+    echo "[soundcork] If speakers also cannot reach this URL, fix base_url to match the host port on the Network tab" >&2
+  elif [[ "${http_code}" =~ ^[23] ]]; then
+    echo "[soundcork] self-check OK: GET ${base_url}/ -> HTTP ${http_code}"
+  else
+    echo "[soundcork] self-check WARNING: GET ${base_url}/ -> HTTP ${http_code}" >&2
+  fi
+) &
 
 # init: false in config.yaml means the supervisor does not inject its own
 # init system. tini reaps zombies and forwards signals so a stop from the

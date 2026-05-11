@@ -14,7 +14,7 @@ USER root
 
 # hadolint ignore=DL3008
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends jq tini \
+    && apt-get install -y --no-install-recommends curl jq tini \
     && rm -rf /var/lib/apt/lists/*
 
 COPY run.sh /run.sh

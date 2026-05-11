@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.4.0 - 2026-05-11
+
+- Adds a supervisor `watchdog` (`tcp://[HOST]:[PORT:8000]`) so HA restarts
+  the add-on automatically if gunicorn stops listening. Tracks the host
+  port set on the Network tab, so a remap there is followed without
+  further config.
+- Adds a `webui` URL so the **Open Web UI** button on the add-on page
+  works. Lands on `/`, which 303-redirects to `/admin/` or
+  `/miniapp/dashboard` depending on setup state. No sidebar entry is
+  added, matching prior decisions.
+- When `base_url` is blank, the startup error now includes a suggested
+  value derived from the HA host's primary IP via the supervisor API
+  (e.g. `http://192.168.1.50:8000`). Best-effort hint, not an
+  auto-fill: speakers may sit on a different VLAN than HA's primary
+  interface, and the Network tab remains the source of truth for the
+  host port.
+- After startup, a one-shot background self-check `GET ${base_url}/` and
+  logs the HTTP status. Catches wrong-host, wrong-port-after-remap, and
+  reverse-proxy misconfigurations the existing scheme regex cannot see.
+
 ## 0.3.1 - 2026-05-11
 
 - Logs the resolved `base_url` and `data_dir` once on startup so the

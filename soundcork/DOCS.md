@@ -58,7 +58,15 @@ on the **Network** tab, change `base_url` to match.
 >   cannot detect this; the speakers will happily dial the wrong port
 >   with no error from the container itself. The wrapper logs the
 >   resolved `base_url` once on startup (`[soundcork] base_url=... data_dir=...`)
->   so you can eyeball it against the Network tab.
+>   so you can eyeball it against the Network tab. A few seconds later
+>   it also logs a self-check (`[soundcork] self-check OK: GET .../ -> HTTP 303`
+>   on success, or a `self-check WARNING` line if the URL is unreachable
+>   or returns 4xx/5xx from inside the container).
+> - If `base_url` is left blank on the Configuration tab, the startup
+>   error includes a suggested value derived from the HA host's primary
+>   IP (e.g. `http://192.168.1.50:8000`). It is a hint, not an
+>   auto-fill: if your speakers sit on a different VLAN than HA's
+>   primary interface, the suggestion will be wrong.
 > - Do not add a `port` option here. The Network tab is the supported
 >   mechanism. Keeping a single source of truth (the Network tab) and
 >   one mirror (`base_url`) is the whole contract.
@@ -71,6 +79,21 @@ otherwise: `/data` is the only path the supervisor mounts as a
 persistent volume, and anything outside it is wiped on add-on update.
 
 Default: `/data/soundcork`.
+
+## Supervisor integration
+
+The wrapper opts into two supervisor features beyond the basics:
+
+- **Watchdog.** `watchdog: tcp://[HOST]:[PORT:8000]` in `config.yaml`
+  tells the supervisor to restart the add-on if the port stops
+  accepting TCP connections (i.e. gunicorn died). The substitution
+  tracks the Network tab, so a host-port remap is followed
+  automatically.
+- **Open Web UI button.** `webui: http://[HOST]:[PORT:8000]/` makes
+  the per-add-on **Open Web UI** button on the SoundCork add-on page
+  land on the root URL, which 303-redirects to `/admin/` or
+  `/miniapp/dashboard` depending on setup state. No sidebar entry is
+  added — see "URL paths" below for why.
 
 ## URL paths exposed by SoundCork
 
