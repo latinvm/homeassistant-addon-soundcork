@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.1 - 2026-05-11
+
+- Adds `icon.png` (128x128) and `logo.png` (600x240) so the add-on
+  shows a custom mark and wordmark in the supervisor store and detail
+  page instead of the default placeholder. No functional change.
+
 ## 0.5.0 - 2026-05-11
 
 - Ships an AppArmor profile (`apparmor.txt`) so the supervisor's add-on
