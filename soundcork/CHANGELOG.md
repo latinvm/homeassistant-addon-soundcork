@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.5.0 - 2026-05-11
+
+- Ships an AppArmor profile (`apparmor.txt`) so the supervisor's add-on
+  rating moves from 4 to 5. The profile is loaded automatically on
+  install/update.
+- The profile is intentionally shipped in **complain mode** for this
+  release. The supervisor credits the rating bump for any add-on that
+  is not `apparmor: disable`, so complain-mode gives us the +1 while
+  denials are logged (not blocked) for one release of real-world soak.
+  A follow-up release will flip the profile to enforce mode after the
+  denial set is reviewed and the profile tightened.
+
 ## 0.4.0 - 2026-05-11
 
 - Adds a supervisor `watchdog` (`tcp://[HOST]:[PORT:8000]`) so HA restarts

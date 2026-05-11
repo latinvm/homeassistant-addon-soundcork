@@ -1,0 +1,77 @@
+#include <tunables/global>
+
+# Complain-mode soak first: the supervisor's rating logic credits the +1
+# for any apparmor != disable, so we ship complain to gather denials
+# without blocking users, then flip to enforce in a follow-up release.
+# See docs/plans/20260511-1105-raise-addon-rating-to-8.md (Stage 1).
+profile soundcork flags=(complain,attach_disconnected,mediate_deleted) {
+  #include <abstractions/base>
+  #include <abstractions/nameservice>
+
+  capability,
+  signal,
+
+  # Speakers call in over HTTP (inet stream); the wrapper calls out to
+  # speakers via SSH and HTTP, and discovers them via mDNS / SSDP
+  # (inet dgram). Speaker IPs are unknown at profile-write time, so
+  # we do not host-scope.
+  network inet stream,
+  network inet dgram,
+  network inet6 stream,
+  network inet6 dgram,
+  network netlink raw,
+  network unix stream,
+  network unix dgram,
+
+  # run.sh and the tools it shells out to (jq/curl/cp/mkdir/find/bash).
+  /run.sh rix,
+  /usr/bin/tini ix,
+  /usr/bin/jq ix,
+  /usr/bin/curl ix,
+  /usr/bin/cp ix,
+  /usr/bin/mkdir ix,
+  /usr/bin/find ix,
+  /usr/bin/bash ix,
+  /bin/** ix,
+  /usr/bin/** ix,
+  /usr/sbin/** ix,
+
+  # gunicorn + python runtime (pip-installed under /usr/local in the
+  # upstream image; distro python lives under /usr).
+  /usr/local/bin/** rix,
+  /usr/lib/python3*/** rm,
+  /usr/local/lib/python3*/** rm,
+
+  # Upstream code and bundled resources.
+  /app/ r,
+  /app/** rm,
+
+  # Persisted volume: options.json, SoundCork app state.
+  /data/ rw,
+  /data/** rwk,
+
+  # Optional manual seed import (read-only).
+  /share/ r,
+  /share/** r,
+
+  # paramiko / scp scratch files used by upstream's read_sources flow.
+  /tmp/ rw,
+  /tmp/** rwlk,
+
+  # Standard runtime reads / writes.
+  /etc/ r,
+  /etc/** r,
+  /proc/ r,
+  /proc/** r,
+  /sys/ r,
+  /sys/** r,
+  /run/ rw,
+  /run/** rwk,
+  /var/ r,
+  /var/** rwk,
+  /dev/null rw,
+  /dev/zero r,
+  /dev/random r,
+  /dev/urandom r,
+  /dev/tty rw,
+}
